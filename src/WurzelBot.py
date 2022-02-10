@@ -195,7 +195,31 @@ class WurzelBot(object):
             self.__logBot.error('Konnte leere Felder von Garten ' + str(garden.getID()) + ' nicht ermitteln.')
         else:
             pass
-        
+        return emptyFields
+
+    def hasEmptyFields(self):
+        emptyFields = self.getEmptyFieldsOfGardens()
+        amount = 0
+        for garden in emptyFields:
+            amount += len(garden)
+
+        return amount > 0
+
+    def getWeedFieldsOfGardens(self):
+        """
+        Gibt alle Unkrau-Felder aller normalen Gärten zurück.
+        """
+        weedFields = []
+        try:
+            for garden in self.garten:
+                weedFields.append(garden.getWeedFields())
+        except:
+            self.__logBot.error('Konnte Unkraut-Felder von Garten ' + str(garden.getID()) + ' nicht ermitteln.')
+        else:
+            pass
+
+        return weedFields
+
     def harvestAllGarden(self):
         #TODO: Wassergarten ergänzen
         try:
@@ -227,37 +251,20 @@ class WurzelBot(object):
             print(logMsg)
             return -1
 
-
-        if product.isProductPlantable():
-            for garden in self.garten:
-                if amount == -1 or amount > self.storage.getStockByProductID(product.getID()):
-                    amount = self.storage.getStockByProductID(product.getID())
-                planted += garden.growPlant(product.getID(), product.getSX(), product.getSY(), amount)
-        else:
+        if not product.isPlant() or not product.isPlantable():
             logMsg = '"' + productName + '" kann nicht angepflanzt werden'
             self.__logBot.error(logMsg)
             print(logMsg)
-            planted = -1
+            return -1
 
+        for garden in self.garten:
+            if amount == -1 or amount > self.storage.getStockByProductID(product.getID()):
+                amount = self.storage.getStockByProductID(product.getID())
+            planted += garden.growPlant(product.getID(), product.getSX(), product.getSY(), amount)
+        
         self.storage.updateNumberInStock()
 
         return planted
-
-    def test(self):
-        #TODO: Für Testzwecke, kann später entfernt werden.
-        #return self.__HTTPConn.getUsrList(1, 15000)
-        """
-        tradeableProducts = self.marktplatz.getAllTradableProducts()
-        for id in tradeableProducts:
-            product = self.productData.getProductByID(id)
-            print product.getName()
-            gaps = self.marktplatz.findBigGapInProductOffers(product.getID(), product.getPriceNPC())
-            if len(gaps) > 0:
-                print gaps
-            print ''
-        """
-        #self.__HTTPConn.growPlantInAquaGarden(162, 9)
-        self.wassergarten.waterPlants()
 
     def printStock(self):
         isSmthPrinted = False
@@ -285,3 +292,26 @@ class WurzelBot(object):
             orderedList += str(self.storage.getOrderedStockList()[productID]).rjust(5)
             orderedList += str('\n')
         return orderedList.strip()
+
+    def getLowestPlantStockEntry(self):
+        lowestStock = -1
+        lowestProductId = -1
+        for productID in self.storage.getOrderedStockList():
+            if not self.productData.getProductByID(productID).isPlant() or \
+                not self.productData.getProductByID(productID).isPlantable():
+                continue
+
+            currentStock = self.storage.getStockByProductID(productID)
+            if lowestStock == -1 or currentStock < lowestStock:
+                lowestStock = currentStock
+                lowestProductId = productID
+                continue
+
+        if lowestProductId == -1: return 'Your stock is empty'
+        return self.productData.getProductByID(lowestProductId).getName()
+
+    def printProductDetails(self):
+        self.productData.printAll()
+
+    def printPlantDetails(self):
+        self.productData.printAllPlants()

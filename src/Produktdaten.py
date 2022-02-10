@@ -70,24 +70,34 @@ class ProductData():
         dictProducts = dict(jProducts)
         keys = dictProducts.keys()
         keys = sorted(keys)
-        #Nicht genutzte Attribute: img, imgPhase, fileext, clear, edge, pieces, speedup_cooldown in Kategorie z
+        # Nicht genutzte Attribute: img, imgPhase, fileext, clear, edge, pieces, speedup_cooldown in Kategorie z
         for key in keys:
-            if key != '999':
-                #999 ist nur ein Testeintrag und wird nicht benötigt.
-                name = dictProducts[key]['name'].replace('&nbsp;', ' ')
-                self.__products.append(Product(id        = int(key), \
-                                               cat       = dictProducts[key]['category'], \
-                                               sx        = dictProducts[key]['sx'], \
-                                               sy        = dictProducts[key]['sy'], \
-                                               name      = name.encode('utf-8'), \
-                                               lvl       = dictProducts[key]['level'], \
-                                               crop      = dictProducts[key]['crop'], \
-                                               plantable = dictProducts[key]['plantable'], \
-                                               time      = dictProducts[key]['time']))
+            # 999 ist nur ein Testeintrag und wird nicht benötigt.
+            if key == '999':
+                continue
+                
+            name = dictProducts[key]['name'].replace('&nbsp;', ' ')
+            self.__products.append(Product(id        = int(key), \
+                                           cat       = dictProducts[key]['category'], \
+                                           sx        = dictProducts[key]['sx'], \
+                                           sy        = dictProducts[key]['sy'], \
+                                           name      = name.encode('utf-8'), \
+                                           lvl       = dictProducts[key]['level'], \
+                                           crop      = dictProducts[key]['crop'], \
+                                           plantable = dictProducts[key]['plantable'], \
+                                           time      = dictProducts[key]['time']))
                 
         self.__setAllPricesOfNPC()
-    
-    
-    def test(self): #TODO: Kann entfernt werden am Ende
-        for product in self.__products:
+
+    def printAll(self):
+        sortedProducts = sorted(self.__products, key=lambda x:x.getName().lower())
+        for product in sortedProducts:
+            product.printAll()
+
+    def printAllPlants(self):
+        sortedProducts = sorted(self.__products, key=lambda x:x.getName().lower())
+        for product in sortedProducts:
+            if not product.isPlant():
+                continue
+
             product.printAll()

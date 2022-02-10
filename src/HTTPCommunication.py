@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""
+'''
 Created on 21.03.2017
 
 @author: MrFlamez
-"""
+'''
 
 from urllib.parse import urlencode
 import json, re, httplib2
@@ -36,10 +36,12 @@ class HTTPConnection(object):
         self.__token = None
         self.__userID = None
 
+
     def __del__(self):
         self.__Session = None
         self.__token = None
         self.__userID = None
+
 
     def __getUserDataFromJSONContent(self, content):
         """
@@ -57,6 +59,7 @@ class HTTPConnection(object):
         userData['time'] = int(content['time'])
         return userData
 
+
     def __checkIfHTTPStateIsOK(self, response):
         """
         Prüft, ob der Status der HTTP Anfrage OK ist.
@@ -64,6 +67,7 @@ class HTTPConnection(object):
         if not (response['status'] == str(HTTP_STATE_OK)):
             self.__logHTTPConn.debug('HTTP State: ' + str(response['status']))
             raise HTTPStateError('HTTP Status ist nicht OK')
+
 
     def __checkIfHTTPStateIsFOUND(self, response):
         """
@@ -73,6 +77,7 @@ class HTTPConnection(object):
             self.__logHTTPConn.debug('HTTP State: ' + str(response['status']))
             raise HTTPStateError('HTTP Status ist nicht FOUND')
 
+
     def __generateJSONContentAndCheckForSuccess(self, content):
         """
         Aufbereitung und Prüfung der vom Server empfangenen JSON Daten.
@@ -81,6 +86,7 @@ class HTTPConnection(object):
         if (jContent['success'] == 1): return jContent
         else: raise JSONError()
 
+
     def __generateJSONContentAndCheckForOK(self, content : str):
         """
         Aufbereitung und Prüfung der vom Server empfangenen JSON Daten.
@@ -88,6 +94,7 @@ class HTTPConnection(object):
         jContent = json.loads(content)
         if (jContent['status'] == 'ok'): return jContent
         else: raise JSONError()
+
 
     def __isFieldWatered(self, jContent, fieldID):
         """
@@ -104,6 +111,7 @@ class HTTPConnection(object):
         if waterDateInSeconds == '0': return False
         elif (currentTimeInSeconds - waterDateInSeconds) > oneDayInSeconds: return False
         else: return True
+
 
     def __getTokenFromURL(self, url):
         """
@@ -124,6 +132,7 @@ class HTTPConnection(object):
             raise JSONError('Fehler bei der Ermittlung des tokens')
         else:
             self.__token = tmpToken
+
 
     def __getUserNameFromJSONContent(self, jContent):
         """
@@ -147,6 +156,7 @@ class HTTPConnection(object):
         else:
             self.__logHTTPConn.debug(jContent['table'])
             raise JSONError('Spielername nicht gefunden.')
+
 
     def __getNumberOfGardensFromJSONContent(self, jContent):
         """
@@ -216,7 +226,24 @@ class HTTPConnection(object):
 
         return emptyFields
 
-    def __generateYAMLContentAndCheckForSuccess(self, content: str):
+    def __findWeedFieldsFromJSONContent(self, jContent):
+        """
+        Sucht im JSON Content nach Felder die mit Unkraut befallen sind und gibt diese zurück.
+        """
+        weedFields = []
+
+        # 41 Unkraut, 42 Baumstumpf, 43 Stein, 45 Maulwurf
+        for field in jContent['garden']:
+            if jContent['garden'][field][0] in [41, 42, 43, 45]:
+                weedFields.append(int(field))
+
+        #Sortierung über ein leeres Array ändert Objekttyp zu None
+        if len(weedFields) > 0:
+            weedFields.sort(reverse=False)
+
+        return weedFields
+
+    def __generateYAMLContentAndCheckForSuccess(self, content : str):
         """
         Aufbereitung und Prüfung der vom Server empfangenen YAML Daten auf Erfolg.
         """
@@ -280,13 +307,7 @@ class HTTPConnection(object):
             
             #Bei der Tabellenüberschrift ist der Text None
             if produktname != None and npc_preis != None:
-                
-                #Produktname aufbereiten
-                if type(produktname) == str:
-                    produktname = produktname.encode('utf-8')
-                    produktname = str(produktname)
-                
-                #NPC-Preis aufbereiten
+                # NPC-Preis aufbereiten
                 npc_preis = str(npc_preis)
                 npc_preis = npc_preis.replace(' wT', '')
                 npc_preis = npc_preis.replace('.', '')
@@ -377,6 +398,7 @@ class HTTPConnection(object):
         else:
             return iNumber
 
+
     def getUserName(self): 
         """
         Ermittelt den Usernamen auf Basis der userID und gibt diesen als str zurück.
@@ -399,6 +421,7 @@ class HTTPConnection(object):
         else:
             return userName
 
+
     def readUserDataFromServer(self):
         """
         Ruft eine Updatefunktion im Spiel auf und verarbeitet die empfangenen userdaten.
@@ -416,6 +439,7 @@ class HTTPConnection(object):
             raise
         else:
             return self.__getUserDataFromJSONContent(jContent)
+
 
     def getPlantsToWaterInGarden(self, gardenID):
         """
@@ -438,6 +462,7 @@ class HTTPConnection(object):
         else:
             return self.__findPlantsToBeWateredFromJSONContent(jContent)
 
+
     def waterPlantInGarden(self, iGarten, iField, sFieldsToWater):
         """
         Bewässert die Pflanze iField mit der Größe sSize im Garten iGarten.
@@ -457,6 +482,7 @@ class HTTPConnection(object):
             self.__generateYAMLContentAndCheckForSuccess(content.decode('UTF-8'))
         except:
             raise
+
 
     def getPlantsToWaterInAquaGarden(self):
         """
@@ -479,6 +505,7 @@ class HTTPConnection(object):
             raise
         else:
             return self.__findPlantsToBeWateredFromJSONContent(jContent)
+        
 
     def waterPlantInAquaGarden(self, iField, sFieldsToWater):
         """
@@ -566,7 +593,7 @@ class HTTPConnection(object):
         else:
             return False
 
-    # TODO: Was passiert wenn ein Garten hinzukommt (parallele Sitzungen im Browser und Bot)? Globale Aktualisierungsfunktion?
+    #TODO: Was passiert wenn ein Garten hinzukommt (parallele Sitzungen im Browser und Bot)? Globale Aktualisierungsfunktion?
 
     def checkIfEMailAdressIsConfirmed(self):
         """
@@ -607,6 +634,7 @@ class HTTPConnection(object):
             raise
         else:
             return content
+
 
     def sendMessageAndReturnResult(self, msg_id, msg_to, msg_subject, msg_body):
         """
@@ -712,6 +740,27 @@ class HTTPConnection(object):
             raise
         else:
             return emptyFields
+
+    def getWeedFieldsOfGarden(self, gardenID):
+        """
+        Gibt alle leeren Felder eines Gartens zurück.
+        """
+        headers = {'Cookie': 'PHPSESSID=' + self.__Session.getSessionID() + '; ' + \
+                             'wunr=' + self.__userID,
+                   'Connection': 'Keep-Alive'}
+        adresse = 'http://s' + str(self.__Session.getServer()) + \
+                  '.wurzelimperium.de/ajax/ajax.php?do=changeGarden&garden=' + \
+                  str(gardenID) + '&token=' + self.__token
+
+        try:
+            response, content = self.__webclient.request(adresse, 'GET', headers = headers)
+            self.__checkIfHTTPStateIsOK(response)
+            jContent = self.__generateJSONContentAndCheckForOK(content)
+            weedFields = self.__findWeedFieldsFromJSONContent(jContent)
+        except:
+            raise
+        else:
+            return weedFields
 
     def harvestGarden(self, gardenID):
         """

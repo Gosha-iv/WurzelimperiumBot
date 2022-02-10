@@ -20,8 +20,8 @@ wurzelBot.harvestAllGarden()
 
 # Plant plants
 planted = -1
-while planted != 0:
-    lowest = wurzelBot.getLowestStockEntry()
+while wurzelBot.hasEmptyFields() and planted != 0:
+    lowest = wurzelBot.getLowestPlantStockEntry()
     if lowest == 'Your stock is empty': break
     print(lowest + ' anpflanzen...')
     planted = wurzelBot.growPlantsInGardens(lowest)
